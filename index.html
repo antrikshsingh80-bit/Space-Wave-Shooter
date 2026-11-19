@@ -1,0 +1,2168 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Space Wave Shooter</title>
+  <style>
+    body{
+      margin:0;
+      background:black;
+      overflow:hidden;   /* 🔥 changed from auto to hidden */
+      font-family:Arial;
+      color:white;
+      touch-action:none;
+    }
+
+    canvas{
+      touch-action:none;  /* 🔥 add this line */
+    }
+    canvas{display:block;margin:auto;background:black;touch-action:none}
+    @keyframes homeZoom {
+      0% { transform: scale(1); }
+      100% { transform: scale(1.08); }
+    }
+
+    .home-bg {
+     animation: homeZoom 20s ease-in-out infinite alternate;
+    }
+    #hud{position:absolute;top:8px;left:8px;font-size:14px}
+    #menu{
+      position:absolute;
+      inset:0;
+      background:black;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      overflow:auto;
+      z-index:10;   /* 👈 IMPORTANT */
+    }
+
+    canvas{
+      position:absolute;
+      inset:0;
+      z-index:0;
+
+    }
+    .btn{
+      padding:14px 20px;
+      margin:10px;
+      width:240px;
+      text-align:center;
+      cursor:pointer;
+      font-weight:bold;
+      letter-spacing:1px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,0.15);
+      background:linear-gradient(145deg,#111,#1c1c1c);
+      box-shadow:
+          0 6px 15px rgba(0,0,0,0.6),
+          inset 0 1px 0 rgba(255,255,255,0.05);
+      transition:all .25s ease;
+      backdrop-filter: blur(4px);
+    }
+    .level{
+      padding:12px;
+      margin:6px;
+      width:180px;
+      text-align:center;
+      border-radius:12px;
+      background:#111;
+      border:1px solid #333;
+      cursor:pointer;
+      transition:all .25s ease;
+      font-weight:bold;
+    }
+
+    .level:hover{
+      background:#1a1a1a;
+      transform:translateY(-3px);
+      box-shadow:0 0 15px rgba(0,255,255,0.4);
+    }
+    .locked{opacity:.3;cursor:not-allowed}
+    .completed{color:#0f0;border-color:#0f0}
+    #topBar{display:flex;gap:20px;margin:10px}
+    #homeShip{width:60px;height:60px;background:cyan;margin-top:60px;animation:float 2s infinite alternate}
+    @keyframes float{from{transform:translateY(-10px)}to{transform:translateY(10px)}}
+    .green{background:green}
+    .statBox{margin-top:10px;font-size:14px}
+    .logoWrap{
+      margin-top:40px;
+      text-align:center;
+    }
+    .logo{
+      font-size:42px;
+      letter-spacing:4px;
+      background:linear-gradient(90deg,#00f,#0ff,#0f0);
+      -webkit-background-clip:text;
+      color:transparent;
+    }
+    .subtitle{
+      margin-top:-10px;
+      color:#aaa;
+      letter-spacing:6px;
+    }
+
+    .shipPreview{
+      position:relative;
+      margin:30px 0;
+    }
+    .shipImg{
+      width:90px;
+      animation:float 2s ease-in-out infinite;
+    }
+    .supportShip{
+      width:48px;
+      animation:float 2s ease-in-out infinite;
+    }
+    .glowRing{
+      position:absolute;
+      inset:-20px;
+      border-radius:50%;
+      border:2px solid cyan;
+      filter:blur(2px);
+      animation:pulse 2s infinite;
+    }
+
+    @keyframes pulse{
+      0%{transform:scale(1);opacity:.6}
+      50%{transform:scale(1.15);opacity:1}
+      100%{transform:scale(1);opacity:.6}
+    }
+    @keyframes neonGlow {
+      0% { box-shadow:0 0 10px rgba(0,255,255,0.3); }
+      50% { box-shadow:0 0 25px rgba(0,255,255,0.6); }
+      100% { box-shadow:0 0 10px rgba(0,255,255,0.3); }
+    }
+
+    .primary{
+      animation:neonGlow 2s infinite;
+    }
+
+    .statCard{
+      background:linear-gradient(145deg,#0f0f0f,#1a1a1a);
+      border:1px solid rgba(0,255,255,0.2);
+      padding:16px;
+      border-radius:16px;
+      width:240px;
+      text-align:left;
+      margin-bottom:20px;
+      box-shadow:0 10px 30px rgba(0,0,0,0.7);
+    }
+    .btn{
+      transition:.2s;
+    }
+    .btn:hover{
+      transform:translateY(-4px) scale(1.05);
+      box-shadow:
+          0 12px 25px rgba(0,255,255,0.4),
+          0 0 20px rgba(0,255,255,0.3);
+      border-color:cyan;
+    }
+    .btn:active{
+      transform:scale(0.92);
+      box-shadow:0 4px 10px rgba(0,0,0,0.8);
+    }
+    .primary{
+      background:linear-gradient(90deg,#00f0ff,#00ff99);
+      color:black;
+      font-weight:bold;
+      box-shadow:
+          0 0 15px #00ffff,
+          0 0 40px rgba(0,255,255,0.5);
+      border:none;
+    }
+    .menuRow{
+      display:flex;
+      gap:10px;
+    }
+    .small{
+      width:100px;
+    }
+    #coinBoard{
+      position:absolute;
+      top:10px;
+      right:10px;
+      background:rgba(0,0,0,0.7);
+      padding:8px 14px;
+      border-radius:12px;
+      border:1px solid gold;
+      font-weight:bold;
+      font-size:16px;
+      color:gold;
+      z-index:20;
+      box-shadow:0 0 10px gold;
+    }
+    #ultimateIcon{
+      position:absolute;
+      bottom:20px;
+      right:20px;
+      width:60px;
+      height:60px;
+      border-radius:50%;
+      background:#111;
+      border:2px solid cyan;
+      display:none;
+
+      align-items:center;
+      justify-content:center;
+      font-size:24px;
+      z-index:30;
+    }
+
+    #ultimateTimer{
+      position:absolute;
+      bottom:-20px;
+      font-size:12px;
+      color:white;
+    }
+    #ultimateText{
+      position:absolute;
+      font-size:24px;
+      pointer-events:none;
+    }
+    /* ===== NEW SHOP UI ===== */
+    .shopTopPreview{
+      margin:20px 0;
+      text-align:center;
+    }
+    .shopTopPreview img{
+      width:110px;
+    }
+    .shopStats{
+      font-size:14px;
+      margin-top:6px;
+      color:#0ff;
+    }
+    .shopGrid{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:10px;
+      width:95%;
+      max-width:360px;
+      margin-top:10px;
+    }
+    .shipCard{
+      background:linear-gradient(145deg,#0f0f0f,#1a1a1a);
+      border:1px solid #333;
+      border-radius:14px;
+      padding:8px;
+      text-align:center;
+      position:relative;
+      cursor:pointer;
+      transition:.25s;
+    }
+    .shipCard:hover{
+      transform:scale(1.05);
+      border-color:cyan;
+      box-shadow:0 0 15px rgba(0,255,255,.4);
+    }
+    .shipCard.locked{
+      opacity:.4;
+    }
+    .shipCard.selected{
+      border-color:#0f0;
+      box-shadow:0 0 15px #0f0;
+    }
+    .shipCard img{
+      width:60px;
+    }
+    .shipPrice{
+      font-size:12px;
+      margin-top:4px;
+      color:gold;
+    }
+    .useBtn{
+      margin-top:10px;
+    }
+    /* ===== NEW PATH LEVEL UI ===== */
+    .levelMap{
+      position:absolute;
+      inset:0;
+      background:url('image1.png') center center / contain no-repeat;
+      background-color:black;
+      display:flex;
+      justify-content:center;
+      overflow-y:auto;
+      overflow-x:hidden;
+      pointer-events:auto;   /* ADD THIS */
+      z-index:15;            /* ADD THIS */
+    }
+
+    .levelMap::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background-image:radial-gradient(white 1px, transparent 1px);
+      background-size:30px 30px;
+      opacity:0.08;
+      pointer-events:none;
+    }
+    .path{
+      position:relative;
+      width:360px;   /* SAME WIDTH AS CANVAS */
+      min-height:2000px;
+    }
+    .levelNode{
+      position:absolute;
+      width:70px;
+      height:70px;
+      border-radius:50%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:bold;
+      cursor:pointer;
+      transition:.3s;
+      border:3px solid rgba(255,255,255,0.2);
+      background:radial-gradient(circle at 30% 30%,#1f1f1f,#0a0a0a);
+      box-shadow:0 0 20px rgba(0,0,0,0.8);
+      backdrop-filter: blur(4px);
+      z-index:5;
+    }
+
+    .levelNode.unlocked{
+      border-color:cyan;
+      box-shadow:0 0 25px cyan;
+      animation:pulseLevel 2s infinite;
+    }
+
+    .levelNode.completed{
+      border-color:#00ff88;
+      box-shadow:0 0 20px #00ff88;
+    }
+
+    .levelNode.locked{
+      opacity:.25;
+      cursor:not-allowed;
+    }
+    .pathLine{
+      position:absolute;
+      width:4px;
+      background:rgba(255,255,255,0.15);
+      pointer-events:none;
+    }
+    @keyframes pulseLevel{
+      0%{transform:scale(1);}
+      50%{transform:scale(1.12);}
+      100%{transform:scale(1);}
+    }
+    .levelNode.unlocked{
+      border-color:cyan;
+      box-shadow:0 0 20px cyan;
+    }
+
+    .levelNode.completed{
+      border-color:#00ff88;
+      box-shadow:0 0 20px #00ff88;
+    }
+
+    .levelNode.locked{
+      opacity:.3;
+      cursor:not-allowed;
+    }
+
+    .pathLine{
+      position:absolute;
+      width:4px;
+      background:rgba(255,255,255,0.15);
+    }
+    #announcement{
+      position:absolute;
+      top:40%;
+      left:50%;
+      transform:translate(-50%,-50%) scale(0.8);
+      font-size:42px;
+      font-weight:bold;
+      letter-spacing:4px;
+      color:white;
+      text-shadow:0 0 25px cyan;
+      opacity:0;
+      pointer-events:none;
+      z-index:100;
+    }
+
+    .showText{
+      animation:announceAnim 1.2s ease forwards;
+    }
+
+    @keyframes announceAnim{
+      0%{opacity:0; transform:translate(-50%,-50%) scale(0.6);}
+      40%{opacity:1; transform:translate(-50%,-50%) scale(1.1);}
+      70%{opacity:1; transform:translate(-50%,-50%) scale(1);}
+      100%{opacity:0; transform:translate(-50%,-50%) scale(0.9);}
+    }
+    #pauseBtn{
+      position:absolute;
+      top:60px;   /* moved down */
+      right:10px;
+      font-size:24px;
+      cursor:pointer;
+      z-index:200;
+      display:none;
+    }
+    #pauseMenu{
+      position:absolute;
+      inset:0;
+      background:rgba(0,0,0,0.7);
+      display:none;
+      justify-content:center;
+      align-items:center;
+      z-index:300;
+    }
+
+    .pauseBox{
+      background:#111;
+      padding:30px;
+      border-radius:20px;
+      text-align:center;
+      box-shadow:0 0 30px cyan;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Game menu and canvas -->
+<div id="menu"></div>
+<canvas id="game"></canvas>
+<div id="coinBoard">
+  💰 <span id="coinAmount">0</span>
+</div>
+<div id="ultimateIcon" onclick="activateUltimate()">
+  <svg width="60" height="60">
+    <circle cx="30" cy="30" r="26" stroke="#222" stroke-width="4" fill="none"/>
+    <circle id="cooldownCircle" cx="30" cy="30" r="26"
+            stroke="cyan"
+            stroke-width="4"
+            fill="none"
+            stroke-dasharray="163"
+            stroke-dashoffset="163"
+            transform="rotate(-90 30 30)"/>
+  </svg>
+
+  <div id="ultimateText">⚡</div>
+  <div id="ultimateTimer"></div>  <!-- ADD THIS -->
+</div>
+<div id="hud"></div>
+<div id="pauseBtn" onclick="openPause()">⏸</div>
+<div id="announcement"></div>
+<div id="pauseMenu">
+  <div class="pauseBox">
+    <div class="btn" onclick="closePause()">❌ Back</div>
+    <div class="btn" onclick="restartLevel()">🔄 Restart</div>
+    <div class="btn" onclick="quitLevel()">🏠 Quit</div>
+  </div>
+</div>
+<audio id="bgMusic" loop>
+  <source src="Fast Times - Quincas Moreira.mp3" type="audio/mpeg">
+</audio>
+
+
+<script>
+  const canvas=document.getElementById("game");
+  const ctx=canvas.getContext("2d");
+  function resizeGame(){
+      let aspectRatio = 9 / 16; // phone vertical
+
+      let w = window.innerWidth;
+      let h = window.innerHeight;
+
+      if(w / h > aspectRatio){
+          w = h * aspectRatio;
+      } else {
+          h = w / aspectRatio;
+      }
+
+      canvas.style.width = w + "px";
+      canvas.style.height = h + "px";
+  canvas.width = 360;
+  canvas.height = 640;
+  }
+
+  window.addEventListener("resize", resizeGame);
+  resizeGame();
+  const bgMusic = document.getElementById("bgMusic");
+
+  function startMusicOnce() {
+      bgMusic.play().catch(() => {});
+  }
+
+  window.addEventListener("click", startMusicOnce, { once: true });
+  window.addEventListener("touchstart", startMusicOnce, { once: true });
+
+  const menu=document.getElementById("menu");
+  const hud=document.getElementById("hud");
+  function updateCoinUI(){
+      document.getElementById("coinAmount").innerText = coins;
+  }
+
+  /* IMAGE LOADING – PLAYER SHIPS (1 → 20) */
+  const playerImages = {};
+  /* BODYGUARD SHIP IMAGES */
+  const bodyguardImages = {};
+
+  for(let i = 1; i <= 10; i++){
+      const img = new Image();
+      img.src = "body" + i + ".png";
+      bodyguardImages[i] = img;
+  }
+
+  // default ships
+  playerImages[1] = new Image(); playerImages[1].src = "1.png";
+  playerImages[2] = new Image(); playerImages[2].src = "2.png";
+  playerImages[3] = new Image(); playerImages[3].src = "3.png";
+  playerImages[4] = new Image(); playerImages[4].src = "4.png";
+
+  // custom ships (as you named)
+  playerImages[5]  = new Image(); playerImages[5].src  = "100.png";
+  playerImages[6]  = new Image(); playerImages[6].src  = "101.png";
+  playerImages[7]  = new Image(); playerImages[7].src  = "102.png";
+  playerImages[8]  = new Image(); playerImages[8].src  = "104.png";
+  playerImages[9]  = new Image(); playerImages[9].src  = "105.png";
+  playerImages[10] = new Image(); playerImages[10].src = "110.png";
+  playerImages[11] = new Image(); playerImages[11].src = "111.png";
+  playerImages[12] = new Image(); playerImages[12].src = "112.png";
+  playerImages[13] = new Image(); playerImages[13].src = "113.png";
+  playerImages[14] = new Image(); playerImages[14].src = "114.png";
+  playerImages[15] = new Image(); playerImages[15].src = "115.png";
+  playerImages[16] = new Image(); playerImages[16].src = "116.png";
+  playerImages[17] = new Image(); playerImages[17].src = "117.png";
+  playerImages[18] = new Image(); playerImages[18].src = "118.png";
+  playerImages[19] = new Image(); playerImages[19].src = "119.png";
+  playerImages[20] = new Image(); playerImages[20].src = "120.png";
+
+  const bossImages = [];
+
+  for(let i = 1; i <= 17; i++){
+    const img = new Image();
+    img.src = `boss${i}.png`;
+    bossImages.push(img);
+  }
+
+  /* ENEMY IMAGES PER LEVEL */
+  const enemyImages = {
+    1: "10.png",
+    2: "11.png",
+    3: "12.png",
+    4: "a.png",
+    5: "c.png",
+    6: "e.png",
+    7: "108.png",
+    8: "109.png",
+    9: "107.png",
+    10:"106.png"
+  };
+  const loadedEnemyImages = {};
+
+  for(let key in enemyImages){
+    const img = new Image();
+    img.src = enemyImages[key];
+    loadedEnemyImages[key] = img;
+  }
+
+  const heartImg=new Image();heartImg.src="heart.png";
+  const bgImg = new Image();
+  bgImg.src = "spacebg.png";   // put your cloud/nebula image name here
+  const shieldImg=new Image();shieldImg.src="shield.png";
+  const bulletImg=new Image();bulletImg.src="bullet.png";
+  const homeBgImg = new Image();
+  homeBgImg.src = "image1.png";
+
+  let state="HOME";
+  let currentLevel=1;
+  let maxUnlocked=1;
+  let coins=0;
+  let ownedShips=[1];
+  let selectedShip=1;
+  // SUPPORT SHIPS
+  let leftOwnedShips = [];
+  let rightOwnedShips = [];
+
+  let selectedLeftShip = null;
+  let selectedRightShip = null;
+  function saveGame(){
+  localStorage.setItem("spaceGameSave",JSON.stringify({
+  coins,
+  maxUnlocked,
+  ownedShips,
+  selectedShip,
+  ships,
+  leftOwnedShips,
+  rightOwnedShips,
+  selectedLeftShip,
+  selectedRightShip
+  }));
+  }
+  function loadGame(){
+  let d=localStorage.getItem("spaceGameSave");
+  if(d){
+  d=JSON.parse(d);
+  coins=d.coins;
+  maxUnlocked=d.maxUnlocked;
+  ownedShips=d.ownedShips;
+  selectedShip=d.selectedShip;
+  // ⭐ ADD THESE LINES HERE
+  leftOwnedShips = d.leftOwnedShips || [];
+  rightOwnedShips = d.rightOwnedShips || [];
+  selectedLeftShip = d.selectedLeftShip || null;
+  selectedRightShip = d.selectedRightShip || null;
+  if(d.ships) {
+      for(let i=0;i<ships.length;i++){
+          ships[i].healthStar = d.ships[i].healthStar;
+          ships[i].damageStar = d.ships[i].damageStar;
+      }
+  }
+  }
+  }
+
+
+  /* SHIPS */
+  const ships=[];
+  // LEFT SUPPORT SHIPS
+  const leftShips = [
+  {id:1,damage:40,cost:100000},
+  {id:2,damage:60,cost:900000},
+  {id:3,damage:90,cost:1500000},
+  {id:4,damage:130,cost:2500000},
+  {id:5,damage:180,cost:4000000},
+  {id:6,damage:240,cost:6000000},
+  {id:7,damage:320,cost:9000000},
+  {id:8,damage:420,cost:10000000},
+  {id:9,damage:550,cost:15000000},
+  {id:10,damage:700,cost:20000000}
+  ];
+
+  // RIGHT SUPPORT SHIPS
+  const rightShips = [
+  {id:1,damage:60,cost:1000000},
+  {id:2,damage:90,cost:2000000},
+  {id:3,damage:130,cost:3500000},
+  {id:4,damage:180,cost:5000000},
+  {id:5,damage:240,cost:7500000},
+  {id:6,damage:320,cost:11000000},
+  {id:7,damage:420,cost:16000000},
+  {id:8,damage:550,cost:21000000},
+  {id:9,damage:700,cost:28000000},
+  {id:10,damage:900,cost:36000000}
+  ];
+  for(let i=1;i<=20;i++){
+
+  let baseHP = 100 + i*i*20;
+
+  // small boost for beginner ships
+  if(i === 1) baseHP += 80;
+  if(i === 2) baseHP += 90;
+  if(i === 3) baseHP += 100;
+  if(i === 4) baseHP += 60;
+
+
+  ships.push({
+      id:i,
+      hp: baseHP,
+      damage:5+i*i,
+      cost:i===1?0:Math.floor(i*i*40000),
+      healthStar:0,
+      damageStar:0,
+  });
+  }
+
+  loadGame();
+
+  /* PLAYER */
+  const player={x:0,y:0,w:75,h:75,hp:100,maxHp:100,damage:5};
+  let killCount=0;
+  let rapidFireTimer=0;
+  let leftFireTimer = 0;
+  let rightFireTimer = 0;
+  let shield=0;
+  let ammoSpeed = 10;  // base speed
+  function applyBulletPattern(b, index){
+      const t = timer * 0.15;
+
+      switch(selectedShip){
+
+          case 1:
+              // DEFAULT – DO NOTHING
+              break;
+
+          case 2:
+      b.x += Math.sin(timer * 0.2 + index) * 1.5;
+      break;
+
+          case 3:
+      b.x += Math.sin(timer * 0.25 + index) * 2.5;
+      break;
+
+          case 4:
+              b.x += Math.sin(t + index) * 2;
+              break;
+
+          case 5:
+              b.x += Math.sin(t * 1.5 + index) * 3;
+              break;
+
+          case 6:
+              b.x += Math.sign(Math.sin(t + index)) * 3;
+              break;
+
+          case 7:
+              b.x += Math.cos(t + index) * 3;
+              b.y += Math.sin(t + index);
+              break;
+
+          case 8:
+              b.x += Math.cos(t + index * 2) * 4;
+              break;
+
+          case 9:
+              if(b.y < 400){
+                  b.x += Math.sin(t) * 4;
+              }
+              break;
+
+          case 10:
+              b.w = 6;
+              b.h = 16;
+              break;
+
+          case 11:
+              b.x += (b.y % 60 < 30 ? -2 : 2);
+              break;
+
+          case 12:
+      b.dy = -ammoSpeed;
+      break;
+
+          case 13:
+              b.x += Math.sin(t + b.y * 0.05) * 3;
+              break;
+
+          case 14:
+              b.x += (Math.random() - 0.5) * 4;
+              break;
+
+          case 15:
+              if(Math.random() < 0.05){
+                  b.w = 8;
+                  b.h = 20;
+              }
+              break;
+
+          case 16:
+              b.x += index % 2 === 0 ? 3 : -3;
+              break;
+
+          case 17:
+              b.x += Math.sin(t * 2 + index) * 5;
+              break;
+
+          case 18:
+              b.x += Math.sin(t + index) * 4;
+              b.y += Math.cos(t) * 1.5;
+              break;
+
+          case 19:
+              b.x += Math.sin(t * 3 + index) * 6;
+              break;
+
+          case 20:
+              b.x += Math.sin(t * 4 + index) * 8;
+              b.y += Math.cos(t * 2) * 2;
+              break;
+      }
+  }
+  let killPowerLevel = 1;
+  let bulletTrails = [];
+  let totalKills = 0;
+  let ultimateCharge = 0;
+  let ultimateReady = false;
+  let ultimateCooldown = 0;
+  let ultimateMaxCooldown = 1800; // 30 seconds (60fps)
+
+
+
+  let bullets=[],enemyBullets=[],enemies=[],airdrops=[];
+  const shipBulletColors = {
+    1: "#ffff00",  // ship 1 stays default yellow
+    2: "#00ffff",
+    3: "#00ff88",
+    4: "#44ff00",
+    5: "#88ff00",
+    6: "#ffcc00",
+    7: "#ff9900",
+    8: "#ff6600",
+    9: "#ff3300",
+    10:"#ff0000",
+    11:"#ff00ff",
+    12:"#cc00ff",
+    13:"#8800ff",
+    14:"#4400ff",
+    15:"#0066ff",
+    16:"#00aaff",
+    17:"#00ffee",
+    18:"#00ffcc",
+    19:"#00ff44",
+    20:"#ffffff"   // GOD MODE
+  };
+  // ================= ENEMY TYPE SYSTEM =================
+  const ENEMY_TYPES = [
+    { tier:1, unlock:1,  hp:60,  dmg:5,  speed:1.6 },
+    { tier:2, unlock:2,  hp:90,  dmg:7,  speed:1.7 },
+    { tier:3, unlock:5,  hp:140, dmg:10, speed:1.8 },
+    { tier:4, unlock:10, hp:220, dmg:16, speed:1.9 },
+    { tier:5, unlock:20, hp:340, dmg:21, speed:2.0 },
+    { tier:6, unlock:40, hp:520, dmg:27, speed:2.1 },
+    { tier:7, unlock:75, hp:780, dmg:34, speed:2.2 },
+    { tier:8, unlock:150,hp:1150,dmg:42, speed:2.3 },
+    { tier:9, unlock:300,hp:1650,dmg:52, speed:2.4 },
+    { tier:10,unlock:600,hp:2400,dmg:65, speed:2.5 }
+  ];
+  let boss = null;
+  let bossSpawned = false;
+  let bossActive = false;
+  let wave=1;
+  let waveTransition = false;
+  const wavesPerLevel=6;
+  let timer=0;
+  let shipSwing = 0;
+  let bgOffset = 0;
+  let paused = false;
+  /* TOUCH CONTROL */
+  let startTouchX = 0;
+  let startTouchY = 0;
+  let startPlayerX = 0;
+  let startPlayerY = 0;
+
+  canvas.addEventListener("touchstart", e => {
+      e.preventDefault();
+      if(state !== "PLAY") return;
+
+      touchActive = true;
+
+      let rect = canvas.getBoundingClientRect();
+      let touch = e.touches[0];
+
+      startTouchX = (touch.clientX - rect.left) * (canvas.width / rect.width);
+      startTouchY = (touch.clientY - rect.top) * (canvas.height / rect.height);
+
+      startPlayerX = player.x;
+      startPlayerY = player.y;
+  }, { passive: false });
+
+  canvas.addEventListener("touchmove", e => {
+      e.preventDefault();
+      moveTouch(e);
+  }, { passive: false });
+
+  canvas.addEventListener("touchend", () => touchActive = false);
+
+  function moveTouch(e){
+      if(state!=="PLAY" || !touchActive) return;
+
+      let rect = canvas.getBoundingClientRect();
+      let touch = e.touches[0];
+
+      let currentTouchX = (touch.clientX - rect.left) * (canvas.width / rect.width);
+      let currentTouchY = (touch.clientY - rect.top) * (canvas.height / rect.height);
+
+      let dx = currentTouchX - startTouchX;
+      let dy = currentTouchY - startTouchY;
+
+      player.x = startPlayerX + dx;
+      player.y = startPlayerY + dy;
+
+      player.x = Math.max(0, Math.min(canvas.width - player.w, player.x));
+      player.y = Math.max(0, Math.min(canvas.height - player.h, player.y));
+  }
+
+  /* STARFIELD */
+  let stars=[];
+  for(let i=0;i<25;i++){
+  stars.push({
+    x: Math.random()*canvas.width,
+    y: Math.random()*canvas.height,
+    s: Math.random()*2+1
+  });
+  }
+
+  const keys={};
+  document.addEventListener("keydown",e=>keys[e.key.toLowerCase()]=true);
+  document.addEventListener("keyup",e=>keys[e.key.toLowerCase()]=false);
+
+  /* HOME */
+  function buildHome(){
+  document.getElementById("ultimateIcon").style.display = "none";
+  document.getElementById("pauseBtn").style.display = "none";
+  let s = ships[selectedShip - 1];
+
+  let upgradedHP = Math.floor(s.hp * (1 + s.healthStar * 0.15));
+  let upgradedDMG = Math.floor(s.damage * (1 + s.damageStar * 0.12));
+
+  let shipMultiplier = Math.pow(s.id, 1.2);
+
+  let healthCost = Math.floor((s.healthStar + 1) ** 2 * 400 * shipMultiplier);
+  let damageCost = Math.floor((s.damageStar + 1) ** 2 * 400 * shipMultiplier);
+
+  menu.innerHTML = `
+  <div class="home-bg" style="
+    position:absolute;
+    inset:0;
+    background:url('image1.png') center center / contain no-repeat;
+  background-color:black;
+    z-index:-1;
+  "></div>
+  <div class="logoWrap">
+    <h1 class="logo">SPACE WAVE</h1>
+    <h2 class="subtitle">SHOOTER</h2>
+  </div>
+  <div style="display:flex;align-items:center;gap:20px">
+
+  <div onclick="openLeftShips()" style="
+  width:70px;
+  height:70px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:linear-gradient(145deg,#111,#1c1c1c);
+  border-radius:50%;
+  border:1px solid #444;
+  box-shadow:0 0 15px rgba(255,255,255,0.15);
+  cursor:pointer;
+  ">
+
+  ${selectedLeftShip
+  ? `<img src="${bodyguardImages[selectedLeftShip].src}" class="supportShip">`
+  : `<span style="font-size:30px;color:#aaa">+</span>`
+  }
+
+  </div>
+
+  <div class="shipPreview">
+    <div class="glowRing"></div>
+    <img src="${(playerImages[selectedShip] || playerImages[1]).src}" class="shipImg">
+  </div>
+
+  <div onclick="openRightShips()" style="
+  width:70px;
+  height:70px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:linear-gradient(145deg,#111,#1c1c1c);
+  border-radius:50%;
+  border:1px solid #444;
+  box-shadow:0 0 15px rgba(255,255,255,0.15);
+  cursor:pointer;
+  ">
+
+  ${selectedRightShip
+  ? `<img src="${bodyguardImages[selectedRightShip].src}" class="supportShip">`
+  : `<span style="font-size:30px;color:#aaa">+</span>`
+  }
+  </div>
+
+  </div>   <!-- ⭐ ADD THIS LINE -->
+
+  <div class="statCard">
+    <div>❤️ Health <b>${upgradedHP}</b></div>
+    <div>💥 Damage <b>${upgradedDMG}</b></div>
+    <div>🚀 Ship <b>#${selectedShip}</b></div>
+  </div>
+
+  <div class="btn primary" onclick="openLevels()">▶️ START MISSION</div>
+
+  <div class="btn">⭐ Health Upgrade (${s.healthStar}/10) – ${healthCost}</div>
+  <div class="btn">⭐ Damage Upgrade (${s.damageStar}/10) – ${damageCost}</div>
+
+  <div class="menuRow">
+    <div class="btn small" onclick="openShop()">🛒 SHOP</div>
+    <div class="btn small" onclick="openLevels()">📜 LEVELS</div>
+  </div>
+  `;
+  let buttons=menu.querySelectorAll(".btn");
+
+  buttons[1].onclick=function(){
+
+
+  if(s.healthStar < 10 && coins >= healthCost){
+  coins -= healthCost;
+  s.healthStar++;
+  saveGame();
+  updateCoinUI();   // ⭐ ADD THIS
+  buildHome();
+  }
+  };
+
+  buttons[2].onclick=function(){
+
+
+  if(s.damageStar < 10 && coins >= damageCost){
+  coins -= damageCost;
+  s.damageStar++;
+  saveGame();
+  updateCoinUI();   // ⭐ ADD THIS
+  buildHome();
+  }
+  };
+
+
+  menu.style.display="flex";
+  state="HOME";
+  }
+
+  function openLevels(){
+  document.getElementById("ultimateIcon").style.display = "none";
+  document.getElementById("pauseBtn").style.display = "none";
+
+  menu.innerHTML = `
+  <div style="
+    position:absolute;
+    top:20px;
+    width:100%;
+    text-align:center;
+    font-size:26px;
+    letter-spacing:3px;
+    color:cyan;
+    text-shadow:0 0 20px cyan;
+  ">GALAXY MAP</div>
+
+  <div class='btn' style="position:absolute;top:20px;left:20px;z-index:50" onclick='buildHome()'>⬅</div>
+
+  <div class="levelMap" id="levelMap">
+      <div class="path" id="levelPath"></div>
+  </div>
+  `;
+
+  let map = document.getElementById("levelMap");
+  let path = document.getElementById("levelPath");
+
+  let totalLevels = 2000;
+  let spacingY = 140;
+  let centerX = 180;
+  let amplitude = 90;
+  let totalHeight = totalLevels * spacingY + 300;
+
+  path.style.height = totalHeight + "px";
+
+  for(let i=1;i<=totalLevels;i++){
+
+      let node = document.createElement("div");
+      node.className = "levelNode";
+
+      let y = totalHeight - (i * spacingY);
+      let x = centerX + Math.sin(i * 0.6) * amplitude;
+
+      node.style.left = x + "px";
+      node.style.top  = y + "px";
+      node.innerText = i;
+
+      if(i % 5 === 0){
+          node.style.borderColor = "red";
+          node.style.boxShadow = "0 0 25px red";
+          node.innerText = "👑";
+      }
+
+      if(i < maxUnlocked){
+          node.classList.add("completed");
+      }
+      else if(i === maxUnlocked){
+          node.classList.add("unlocked");
+      }
+      else{
+          node.classList.add("locked");
+      }
+
+      if(i <= maxUnlocked){
+          node.onclick = ()=>startLevel(i);
+      }
+
+      path.appendChild(node);
+
+      if(i > 1){
+
+          let prevY = totalHeight - ((i-1) * spacingY);
+          let prevX = centerX + Math.sin((i-1) * 0.6) * amplitude;
+
+          let line = document.createElement("div");
+          line.className = "pathLine";
+
+          let dx = x - prevX;
+          let dy = y - prevY;
+          let length = Math.sqrt(dx*dx + dy*dy);
+          let angle = Math.atan2(dy, dx) * 180 / Math.PI;
+
+          line.style.width = length + "px";
+          line.style.height = "4px";
+          line.style.left = prevX + 35 + "px";
+          line.style.top = prevY + 35 + "px";
+          line.style.transformOrigin = "0 0";
+          line.style.transform = `rotate(${angle}deg)`;
+
+          path.appendChild(line);
+      }
+  }
+
+  setTimeout(()=>{
+      let targetY = totalHeight - (maxUnlocked * spacingY);
+      map.scrollTop = targetY - map.clientHeight/2;
+  },50);
+
+  menu.style.display="flex";
+  state="LEVELS";
+  }
+  function startLevel(levelNumber){
+
+      currentLevel = levelNumber;
+      state = "PLAY";
+
+      menu.style.display = "none";
+
+      resetGame();
+      spawnWave();
+
+      document.getElementById("ultimateIcon").style.display = "flex";
+      document.getElementById("pauseBtn").style.display = "block";
+  }
+  function openShop(){
+  document.getElementById("ultimateIcon").style.display = "none";
+  document.getElementById("pauseBtn").style.display = "none";
+
+  let s = ships[selectedShip-1];
+
+  menu.innerHTML = `
+  <h2>SHIP SHOP</h2>
+  <div class='btn' onclick='buildHome()'>⬅ BACK</div>
+
+  <div class="shopTopPreview">
+    <img src="${(playerImages[selectedShip]||playerImages[1]).src}">
+    <div class="shopStats">
+      HP: ${s.hp} <br>
+      DMG: ${s.damage}
+    </div>
+    ${ownedShips.includes(selectedShip)
+      ? `<div class="btn primary useBtn" onclick="buildHome()">USE SHIP</div>`
+      : `<div class="btn useBtn locked">LOCKED</div>`
+    }
+  </div>
+
+  <div class="shopGrid" id="shopGrid"></div>
+  `;
+
+  let grid = document.getElementById("shopGrid");
+
+  ships.forEach(ship=>{
+
+  let owned = ownedShips.includes(ship.id);
+
+  let card = document.createElement("div");
+  card.className = "shipCard";
+  if(!owned) card.classList.add("locked");
+  if(ship.id === selectedShip) card.classList.add("selected");
+
+  card.innerHTML = `
+  <img src="${(playerImages[ship.id]||playerImages[1]).src}">
+  <div>Ship ${ship.id}</div>
+  <div class="shipPrice">
+  ${owned ? "OWNED" : "Cost: "+ship.cost}
+  </div>
+  `;
+
+  card.onclick = ()=>{
+
+  if(owned){
+  selectedShip = ship.id;
+  saveGame();
+  openShop();
+  }
+  else if(coins >= ship.cost){
+  coins -= ship.cost;
+  ownedShips.push(ship.id);
+  selectedShip = ship.id;
+  saveGame();
+  updateCoinUI();   // ⭐ ADD THIS
+  openShop();
+  }
+  };
+  grid.appendChild(card);
+
+  });
+
+  menu.style.display="flex";
+  state="SHOP";
+  }
+
+  function openLeftShips(){
+
+  let lockText = "";
+
+  if(maxUnlocked < 20){
+  lockText = "<div style='color:red'>Unlocks at Level 20</div>";
+  }
+
+  menu.innerHTML = `
+  <h2>LEFT SHIPS</h2>
+  ${lockText}
+  <div class='btn' onclick='buildHome()'>⬅ BACK</div>
+  <div class="shopGrid" id="leftShipGrid"></div>
+  `;
+
+  let grid = document.getElementById("leftShipGrid");
+
+  leftShips.forEach(ship=>{
+
+  let owned = leftOwnedShips.includes(ship.id);
+
+  let card=document.createElement("div");
+  card.className="shipCard";
+
+  card.innerHTML=`
+  <img src="${bodyguardImages[ship.id].src}">
+  <div>Ship ${ship.id}</div>
+  <div style="color:#0ff;font-size:12px">
+  ⚡ DMG: ${ship.damage}
+  </div>
+  <div class="shipPrice">
+  ${owned ? "OWNED" : "Cost: "+ship.cost}
+  </div>
+  `;
+  card.onclick=()=>{
+
+  if(owned){
+  selectedLeftShip=ship.id;
+  buildHome();
+  }
+  else if(maxUnlocked >= 20 && coins >= ship.cost){
+  coins-=ship.cost;
+  leftOwnedShips.push(ship.id);
+  selectedLeftShip=ship.id;
+  saveGame();
+  buildHome();
+  }
+
+  };
+
+  grid.appendChild(card);
+
+  });
+
+  menu.style.display="flex";
+  }
+  function openRightShips(){
+
+  let lockText = "";
+
+  if(maxUnlocked < 50){
+  lockText = "<div style='color:red'>Unlocks at Level 50</div>";
+  }
+
+  menu.innerHTML = `
+  <h2>RIGHT SHIPS</h2>
+  ${lockText}
+  <div class='btn' onclick='buildHome()'>⬅ BACK</div>
+  <div class="shopGrid" id="rightShipGrid"></div>
+  `;
+
+  let grid = document.getElementById("rightShipGrid");
+
+  rightShips.forEach(ship=>{
+
+  let owned = rightOwnedShips.includes(ship.id);
+
+  let card=document.createElement("div");
+  card.className="shipCard";
+
+  card.innerHTML=`
+  <img src="${bodyguardImages[ship.id].src}">
+  <div>Ship ${ship.id}</div>
+  <div style="color:#0ff;font-size:12px">
+  ⚡ DMG: ${ship.damage}
+  </div>
+  <div class="shipPrice">
+  ${owned ? "OWNED" : "Cost: "+ship.cost}
+  </div>
+  `;
+
+  card.onclick=()=>{
+
+  if(owned){
+  selectedRightShip=ship.id;
+  buildHome();
+  }
+  else if(maxUnlocked >= 50 && coins >= ship.cost){
+  coins-=ship.cost;
+  rightOwnedShips.push(ship.id);
+  selectedRightShip=ship.id;
+  saveGame();
+  buildHome();
+  }
+
+  };
+
+  grid.appendChild(card);
+
+  });
+
+  menu.style.display="flex";
+  }
+  function showAnnouncement(text, color="cyan"){
+      const el = document.getElementById("announcement");
+      el.innerText = text;
+      el.style.color = color;
+      el.classList.remove("showText");
+
+      void el.offsetWidth; // restart animation
+
+      el.classList.add("showText");
+  }
+  function openPause(){
+    if(state !== "PLAY") return;
+    paused = true;
+    document.getElementById("pauseMenu").style.display="flex";
+  }
+
+  function closePause(){
+    paused = false;
+    document.getElementById("pauseMenu").style.display="none";
+  }
+
+  function restartLevel(){
+    paused = false;
+    document.getElementById("pauseMenu").style.display="none";
+    resetGame();
+    spawnWave();
+  }
+
+  function quitLevel(){
+    paused = false;
+    document.getElementById("pauseMenu").style.display="none";
+    document.getElementById("pauseBtn").style.display="none";
+    state="HOME";
+    buildHome();
+  }
+  function resetGame(){
+      let s=ships[selectedShip-1];
+
+      player.maxHp=Math.floor(s.hp*(1+s.healthStar*0.15));
+
+      player.hp=player.maxHp;
+      player.damage=Math.floor(s.damage*(1+s.damageStar*0.12));
+      player.x=canvas.width/2-16;
+      player.y=canvas.height-80;
+
+      bullets=[];
+      enemyBullets=[];
+      enemies=[];
+      airdrops=[];
+
+      // VERY IMPORTANT FIX
+      boss = null;
+      bossActive = false;
+      bossSpawned = false;
+
+      shield = 0;
+      rapidFireTimer = 0;
+
+      wave=1;
+      timer=0;
+      killPowerLevel = 1;
+      totalKills = 0;
+
+  }
+  function hit(a,b){
+    return a.x<b.x+b.w &&
+           a.x+a.w>b.x &&
+           a.y<b.y+b.h &&
+           a.y+a.h>b.y;
+  }
+
+  function scaleEnemy(base, level){
+    // soft scaling: strong early, smooth late game
+    const dmgScale = 1 + Math.pow(level, 0.6) * 0.03;
+    const hpScale  = 1 + Math.pow(level, 0.75) * 0.05;
+
+    return {
+      hp: Math.floor(base.hp * hpScale),
+      dmg: Math.floor(base.dmg * dmgScale),
+      speed: base.speed
+    };
+  }
+  function getAvailableEnemyTypes(level){
+    return ENEMY_TYPES.filter(e => level >= e.unlock);
+  }
+
+  function spawnWave(){
+
+    enemies = [];
+    const FORMATIONS = ["V","LINE","CIRCLE","SWARM"];
+    const available = getAvailableEnemyTypes(currentLevel);
+    const maxEnemies = Math.min(6 + wave * 2, 12);
+
+    for(let i=0;i<maxEnemies;i++){
+     let formation = FORMATIONS[Math.floor(Math.random()*FORMATIONS.length)];
+      let pool = available;
+
+      // new enemy only appears in LAST wave of unlock level
+      if(wave < wavesPerLevel){
+        pool = available.filter(e => e.unlock < currentLevel);
+        if(pool.length === 0) pool = available;
+      }
+
+      if(pool.length === 0) pool = available;
+
+  if(pool.length === 0) pool = available;
+
+  let pick = pool[Math.floor(Math.random()*pool.length)];
+      let scaled = scaleEnemy(pick, currentLevel);
+
+      let enemyType = Math.floor(Math.random()*10)+1;
+
+  // wave based variation
+  if(wave === 1) enemyType = Math.random() < 0.5 ? 1 : 2;
+  if(wave === 2) enemyType = Math.random() < 0.5 ? 3 : 4;
+  if(wave === 3) enemyType = Math.random() < 0.5 ? 5 : 6;
+  if(wave === 4) enemyType = Math.random() < 0.5 ? 7 : 8;
+  if(wave === 5) enemyType = 8 + Math.floor(Math.random()*3); // 8-10
+  if(wave === 6) enemyType = 9 + Math.floor(Math.random()*2); // 9-10
+
+  let posX = 0;
+  let posY = 0;
+
+  if(formation === "LINE"){
+      posX = 40 + (i % 8) * 40;
+      posY = 80 + Math.floor(i/8) * 40;
+  }
+
+  else if(formation === "V"){
+      posX = canvas.width/2 + (i - maxEnemies/2) * 30;
+      posY = 80 + Math.abs(i - maxEnemies/2) * 12;
+  }
+
+  else if(formation === "CIRCLE"){
+      let angle = (i / maxEnemies) * Math.PI * 2;
+      posX = canvas.width/2 + Math.cos(angle) * 120;
+      posY = 120 + Math.sin(angle) * 60;
+  }
+
+  else{ // SWARM
+      posX = Math.random()*(canvas.width-50);
+      posY = Math.random()*180;
+  }
+
+  enemies.push({
+    x: posX,
+    y: posY,
+    w:50,
+    h:50,
+    hp: scaled.hp,
+    maxHp: scaled.hp,
+    damage: scaled.dmg,
+    dx:(Math.random()*2-1)*scaled.speed,
+    dy:(Math.random()*2-1)*scaled.speed,
+    shootCooldown:80,
+    tier:pick.tier,
+    type: enemyType
+  });
+  }
+  }
+  function spawnBoss(){
+      enemies = [];
+      bossActive = true;
+
+      const baseBossHP = 6000;
+      const bossScale = 1 + Math.pow(currentLevel, 0.8) * 0.25;
+      const finalBossHP = Math.floor(baseBossHP * bossScale);
+
+      boss = {
+          x: canvas.width/2 - 90,
+          y: 80,
+          w: 180,
+          h: 180,
+          hp: finalBossHP,
+          maxHp: finalBossHP,
+          attackTimer: 0,
+          moveDir: 1
+      };
+  }
+  function update(){
+  if(!canvas || !ctx) return;
+  if(state!=="PLAY" || paused) return;
+  timer++;
+  shipSwing = Math.sin(timer * 0.12) * 14;
+  leftFireTimer++;
+  rightFireTimer++;
+  bgOffset += 2;  // speed of background
+  if(bgOffset >= canvas.height){
+      bgOffset = 0;
+  }
+
+
+  stars.forEach(s=>{
+      s.y += s.s + 2;
+      if(s.y > canvas.height){
+          s.y = 0;
+          s.x = Math.random() * canvas.width;
+      }
+  });
+  if(keys["a"]||keys["arrowleft"])player.x-=6;
+  if(keys["d"]||keys["arrowright"])player.x+=6;
+  if(keys["w"]||keys["arrowup"])player.y-=6;
+  if(keys["s"]||keys["arrowdown"])player.y+=6;
+
+  player.x=Math.max(0,Math.min(canvas.width-player.w,player.x));
+  player.y=Math.max(0,Math.min(canvas.height-player.h,player.y));
+  let fireRate = rapidFireTimer > 0 ? 5 : 10;
+
+  if(timer % fireRate === 0 && bullets.length < 150){
+
+      // Level 1 → one bullet
+      if(killPowerLevel === 1){
+          bullets.push({
+              x: player.x + player.w/2 - 2,
+              y: player.y,
+              w: 4,
+              h: 10,
+              dy: -ammoSpeed,
+              color: shipBulletColors[selectedShip]
+          });
+      }
+
+      // Level 2 → two bullets
+  else if(killPowerLevel === 2){
+
+      bullets.push({
+          x: player.x + 10,
+          y: player.y,
+          w: 4,
+          h: 10,
+          dy: -ammoSpeed,
+          color: shipBulletColors[selectedShip]
+      });
+
+      bullets.push({
+          x: player.x + player.w - 14,
+          y: player.y,
+          w: 4,
+          h: 10,
+          dy: -ammoSpeed,
+          color: shipBulletColors[selectedShip]
+      });
+
+  }
+
+      // Level 3+ → wave bullets
+      else{
+          for(let i=0;i<killPowerLevel;i++){
+              bullets.push({
+                  x: player.x + player.w/2,
+                  y: player.y,
+                  w: 4,
+                  h: 10,
+                  dy: -ammoSpeed,
+                  angle: i,
+                  color: shipBulletColors[selectedShip]
+              });
+          }
+      }
+     // LEFT SHIP FIRE
+  if(selectedLeftShip && leftFireTimer > 10){
+
+  let leftData = leftShips[selectedLeftShip-1];
+
+  bullets.push({
+  x:player.x - 70,
+  y:player.y + 10,
+  w:4,
+  h:10,
+  dy:-ammoSpeed,
+  damage:leftData.damage,
+  color:"cyan"
+  });
+
+  leftFireTimer = 0;
+  }
+
+  // RIGHT SHIP FIRE
+  if(selectedRightShip && rightFireTimer > 10){
+
+  let swing = -shipSwing;
+  let rightData = rightShips[selectedRightShip-1];
+
+  bullets.push({
+  x:player.x + player.w + 60,
+  y:player.y + swing,
+  w:4,
+  h:10,
+  dy:-ammoSpeed,
+  damage:rightData.damage,
+  color:"cyan"
+  });
+
+  rightFireTimer = 0;
+
+  }
+  }
+  if(rapidFireTimer>0)rapidFireTimer--;
+  if(ultimateCooldown > 0) ultimateCooldown--;
+  // UNIVERSAL enemy bullet movement (normal + boss)
+  enemyBullets.forEach(b=>{
+      b.x += b.dx || 0;
+      b.y += b.dy || 5;
+  });
+  // ✅ PUT COLLISION CHECK HERE
+  for(let i=enemyBullets.length-1;i>=0;i--){
+    if(hit(enemyBullets[i],player)){
+      let bullet = enemyBullets[i];
+  let dmg = bullet.damage || Math.floor(8 + Math.pow(currentLevel, 0.65));
+      enemyBullets.splice(i,1);
+      if(shield>0){shield-=20;}
+      else player.hp -= dmg;
+    }
+  }
+  for(let i = bullets.length - 1; i >= 0; i--){
+
+  let b = bullets[i];
+
+  if(timer % 3 === 0){
+      bulletTrails.push({
+          x: b.x + b.w/2,
+          y: b.y + b.h,
+          life: 6,
+          color: b.color || "#ffff00"
+      });
+
+      if(bulletTrails.length > 40){
+          bulletTrails.shift();
+      }
+  }
+
+  applyBulletPattern(b,i);
+
+  if(b.angle !== undefined){
+      b.x += Math.sin(timer*0.2 + b.angle) * 3;
+  }
+
+  b.x += b.dx || 0;
+  b.y += b.dy || -ammoSpeed;
+
+  if(b.y < -40){
+      bullets.splice(i,1);
+  }
+  }
+  bullets=bullets.filter(b=>b.y>-20);
+
+  enemies.forEach(e=>{
+
+      e.x += e.dx;
+      e.y += e.dy;
+
+      if(e.x < 0 || e.x > canvas.width - e.w) e.dx *= -1;
+      if(e.y < 20 || e.y > 300) e.dy *= -1;
+
+      e.shootCooldown--;
+
+      if(e.shootCooldown <= 0){
+
+          if(enemyBullets.length < 80){
+
+              enemyBullets.push({
+                  x: e.x + e.w/2 - 3,
+                  y: e.y + e.h,
+                  w:6,
+                  h:12,
+                  dy:5,
+                  damage: e.damage
+              });
+
+              e.shootCooldown = 100 - Math.min(currentLevel*2,60);
+          }
+
+      }
+
+  });
+  enemies = enemies.filter(e =>
+      e.x > -100 &&
+      e.x < canvas.width + 100 &&
+      e.y > -100 &&
+      e.y < canvas.height + 200 &&
+      e.hp > 0
+  );
+  airdrops.forEach(a=>a.y+=3);
+
+  for(let i=airdrops.length-1;i>=0;i--){
+  airdrops[i].w=20;
+  airdrops[i].h=20;
+  if(hit(airdrops[i],player)){
+  if(airdrops[i].type==="hp")player.hp=Math.min(player.maxHp,player.hp+50);
+  if(airdrops[i].type==="shield")shield=100;
+  if(airdrops[i].type==="rapid")rapidFireTimer=300;
+  airdrops.splice(i,1);
+  }
+  }
+
+  for(let i=bullets.length-1;i>=0;i--){
+  for(let j=enemies.length-1;j>=0;j--){
+  if(hit(bullets[i],enemies[j])){
+  let dmg = bullets[i].damage || player.damage;
+  enemies[j].hp -= dmg;
+  bullets.splice(i,1);
+  if(enemies[j].hp<=0){
+  coins += 25 + currentLevel * 8;
+  if(Math.random()<0.7){
+  airdrops.push({
+  x:enemies[j].x,
+  y:enemies[j].y,
+  w:20,h:20,
+  type:["hp","shield","rapid"][Math.floor(Math.random()*3)]
+  });
+  }
+  enemies.splice(j,1);
+  totalKills++;
+  ultimateCharge += 20;
+  if(ultimateCharge >= 100){
+      ultimateCharge = 100;
+      ultimateReady = true;
+  }
+  if(totalKills < 4) killPowerLevel = 1;
+  else if(totalKills < 8) killPowerLevel = 2;
+  else if(totalKills < 15) killPowerLevel = 3;
+  else if(totalKills < 25) killPowerLevel = 4;
+  else killPowerLevel = 5;}
+  break;
+  }
+  }
+  }
+  window.activateUltimate = function(){
+      if(!ultimateReady || state !== "PLAY" || ultimateCooldown > 0) return;
+
+      ultimateReady = false;
+      ultimateCharge = 0;
+      ultimateCooldown = ultimateMaxCooldown;
+
+      switch(selectedShip){
+
+          case 1:
+      // V-BLAST
+              for(let a=-30;a<=30;a+=15){
+                  let rad=a*Math.PI/180;
+                  bullets.push({
+                      x:player.x+player.w/2,
+                      y:player.y,
+                      w:6,h:14,
+                      dx:Math.sin(rad)*6,
+                      dy:-Math.cos(rad)*6,
+                      color:shipBulletColors[2]
+                  });
+              }
+              break;
+
+
+          case 2: // V-BLAST
+              for(let a=-30;a<=30;a+=15){
+                  let rad=a*Math.PI/180;
+                  bullets.push({
+                      x:player.x+player.w/2,
+                      y:player.y,
+                      w:6,h:14,
+                      dx:Math.sin(rad)*6,
+                      dy:-Math.cos(rad)*6,
+                      color:shipBulletColors[2]
+                  });
+              }
+              break;
+
+          case 3: // WAVE WALL
+              for(let i=0;i<12;i++){
+                  bullets.push({
+                      x:i*30,
+                      y:player.y,
+                      w:6,h:14,
+                      dy:-6,
+                      angle:i,
+                      color:shipBulletColors[3]
+                  });
+              }
+              break;
+
+          case 4: // SPIRAL
+              for(let i=0;i<24;i++){
+                  let r=i*Math.PI/12;
+                  bullets.push({
+                      x:player.x+player.w/2,
+                      y:player.y,
+                      w:6,h:6,
+                      dx:Math.cos(r)*4,
+                      dy:Math.sin(r)*4,
+                      color:shipBulletColors[4]
+                  });
+              }
+              break;
+
+          case 5: // SCREEN CLEAR
+              enemies.forEach(e=>e.hp -= player.damage*5);
+              break;
+
+          default: // SHIP 6 → 20 (GOD BLAST)
+              for(let a=0;a<360;a+=12){
+                  let rad=a*Math.PI/180;
+                  bullets.push({
+                      x:player.x+player.w/2,
+                      y:player.y,
+                      w:6,h:6,
+                      dx:Math.cos(rad)*5,
+                      dy:Math.sin(rad)*5,
+                      color:shipBulletColors[selectedShip]
+                  });
+              }
+              break;
+      }
+  }
+
+  document.addEventListener("keydown", e=>{
+      if(e.code === "Space"){
+          activateUltimate();
+      }
+  });
+
+  // mobile double tap
+  let lastTap = 0;
+  canvas.addEventListener("touchend", ()=>{
+      let now = Date.now();
+      if(now - lastTap < 300){
+          activateUltimate();
+      }
+      lastTap = now;
+  });
+  // Remove off-screen bullets
+  for(let i = bulletTrails.length - 1; i >= 0; i--){
+      bulletTrails[i].life--;
+      bulletTrails[i].y += 1;
+
+      if(bulletTrails[i].life <= 0){
+          bulletTrails.splice(i,1);
+      }
+  }
+  enemyBullets = enemyBullets.filter(b =>
+      b.x > -50 &&
+      b.x < canvas.width + 50 &&
+      b.y > -50 &&
+      b.y < canvas.height + 50
+  );
+
+  /* BOSS LOGIC */
+  if(boss){
+
+      // Movement
+      boss.x += boss.moveDir * 2;
+      if(boss.x < 0 || boss.x > canvas.width - boss.w){
+          boss.moveDir *= -1;
+      }
+
+      boss.attackTimer++;
+
+      if(boss.attackTimer % 120 === 0){
+      if(enemyBullets.length > 60) enemyBullets.length = 60;
+
+      let attackType = Math.floor(Math.random() * 4);
+
+      // 1️⃣ LASER ATTACK (straight powerful beam)
+      if(attackType === 0){
+          for(let i=0;i<5;i++){
+              enemyBullets.push({
+                  x: boss.x + boss.w/2 - 5 + i*4,
+                  y: boss.y + boss.h,
+                  w:8,
+                  h:30,
+                  dy:8
+              });
+          }
+      }
+
+      // 2️⃣ CIRCLE BLAST
+      else if(attackType === 1){
+        for(let a=0;a<360;a+=30){
+              let rad = a * Math.PI/180;
+              enemyBullets.push({
+                  x: boss.x+boss.w/2,
+                  y: boss.y+boss.h/2,
+                  w:6,h:6,
+                  dx: Math.cos(rad)*4,
+                  dy: Math.sin(rad)*4
+              });
+          }
+      }
+
+      // 3️⃣ BULLET RAIN
+      else if(attackType === 2){
+          for(let i=0;i<8;i++){
+              enemyBullets.push({
+                  x: boss.x + Math.random()*boss.w,
+                  y: boss.y + boss.h,
+                  w:6,
+                  h:12,
+                  dy:6
+              });
+          }
+      }
+
+      // 4️⃣ EXPLOSIVE BURST (slow heavy bullets)
+      else{
+          for(let i=0;i<6;i++){
+              enemyBullets.push({
+                  x: boss.x+boss.w/2,
+                  y: boss.y+boss.h/2,
+                  w:14,
+                  h:14,
+                  dx:(Math.random()*6-3),
+                  dy:(Math.random()*6-3)
+              });
+          }
+      }
+  }
+      // Player bullets hit boss
+      for(let i=bullets.length-1;i>=0;i--){
+      if(boss && hit(bullets[i],boss)){
+
+          let dmg = bullets[i].damage || player.damage;
+
+          boss.hp -= dmg;
+
+          bullets.splice(i,1);
+      }
+  }
+
+      // Boss defeated
+      if(boss.hp <= 0){
+      bossActive = false;
+      boss = null;
+
+      coins += Math.floor(1800 * Math.pow(currentLevel, 1.05));
+      maxUnlocked = Math.max(maxUnlocked,currentLevel+1);
+      saveGame();
+
+      showAnnouncement("YOU WON", "#00ff88");
+
+  setTimeout(()=>{
+
+      document.getElementById("ultimateIcon").style.display = "none";
+      document.getElementById("pauseBtn").style.display = "none";
+
+      buildHome();
+
+  },1500);
+  }
+  }
+  // ----- WAVE & BOSS CHECK -----
+  // ----- WAVE & BOSS CHECK -----
+  if(enemies.length <= 0 && !bossActive && !bossSpawned && !waveTransition){
+
+      waveTransition = true;
+      wave++;
+
+      if(wave <= wavesPerLevel){
+
+          showAnnouncement("WAVE " + wave, "cyan");
+
+          setTimeout(()=>{
+              spawnWave();
+              waveTransition = false;
+          },1000);
+
+      }else{
+
+          showAnnouncement("BOSS FIGHT", "red");
+
+          setTimeout(()=>{
+              spawnBoss();
+              bossSpawned = true;
+              waveTransition = false;
+          },1000);
+      }
+  }
+  if(player.hp <= 0 && state === "PLAY"){
+      player.hp = 0;
+      state = "LOST";
+
+      showAnnouncement("YOU LOST", "red");
+
+      setTimeout(()=>{
+          quitLevel();
+      },1000);
+  }
+  hud.innerHTML = `
+  ❤️ ${player.hp}/${player.maxHp}
+  🛡 Shield:${shield}
+  🚀 Ship ${selectedShip}
+  🔫 Power Lv ${killPowerLevel}
+  🌊 Wave ${wave}/${wavesPerLevel}
+  🎯 Level ${currentLevel}
+
+  `;
+   document.getElementById("coinAmount").innerText = coins;
+  let timerUI = document.getElementById("ultimateTimer");
+  if(!timerUI) timerUI = { innerText: "" };
+  if(ultimateCooldown > 0){
+      timerUI.innerText = Math.ceil(ultimateCooldown / 60) + "s";
+      document.getElementById("ultimateIcon").style.opacity = 0.5;
+  }else{
+      timerUI.innerText = "READY";
+      document.getElementById("ultimateIcon").style.opacity = 1;
+  }
+  /* 🔥 ADD THIS RIGHT HERE */
+  let circle = document.getElementById("cooldownCircle");
+  let percent = ultimateCharge / 100;
+  let circumference = 163;
+  if(circle){
+  circle.style.strokeDashoffset = circumference - (circumference * percent);
+  }
+
+  }   // ✅ CLOSE update() FUNCTION
+
+  function draw(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  if(bgImg.complete){
+      ctx.drawImage(bgImg, 0, bgOffset - canvas.height, canvas.width, canvas.height);
+      ctx.drawImage(bgImg, 0, bgOffset, canvas.width, canvas.height);
+  }
+  // SHIP GLOW
+
+  // Draw Ship
+  // SHIP GLOW
+  ctx.shadowColor = shipBulletColors[selectedShip] || "cyan";
+  ctx.shadowBlur = 25;
+
+  // Draw Ship
+  let shipImg = playerImages[selectedShip] || playerImages[1];
+
+  if(shipImg && shipImg.complete){
+      ctx.drawImage(shipImg,player.x,player.y,player.w,player.h);
+  }
+  // LEFT BODYGUARD
+  if(selectedLeftShip){
+
+  let swing = shipSwing;
+  ctx.shadowColor="cyan";
+  ctx.shadowBlur=15;
+
+  ctx.drawImage(
+      bodyguardImages[selectedLeftShip],
+      player.x - 85,
+      player.y + swing,
+      32,
+      32
+  );
+
+  ctx.shadowBlur=0;
+
+  }
+  // RIGHT BODYGUARD
+  if(selectedRightShip){
+
+  let swing = -shipSwing;   // opposite swing looks better
+
+  ctx.shadowColor="cyan";
+  ctx.shadowBlur=15;
+
+  ctx.drawImage(
+      bodyguardImages[selectedRightShip],
+      player.x + player.w + 50,
+      player.y + swing,
+      32,
+      32
+  );
+
+  ctx.shadowBlur=0;
+
+  }
+  // Reset shadow
+  ctx.shadowBlur = 0;
+  // Reset shadow
+  ctx.shadowBlur = 0;
+  // DRAW BULLET TRAILS
+  bulletTrails.forEach(t=>{
+      ctx.globalAlpha = t.life / 15;
+      ctx.fillStyle = t.color;
+      ctx.fillRect(t.x-2, t.y, 4, 6);
+  });
+  ctx.globalAlpha = 1;
+
+  // DRAW BULLETS
+  bullets.forEach(b=>{
+      ctx.fillStyle = b.color || "yellow";
+      ctx.fillRect(b.x,b.y,b.w,b.h);
+  });
+  ctx.fillStyle="orange";
+  enemyBullets.forEach(b=>ctx.fillRect(b.x,b.y,b.w,b.h));
+
+  enemies.forEach(e=>{
+    let img = loadedEnemyImages[e.type];
+
+  if(!img){
+      img = loadedEnemyImages[10];
+  }
+
+  if(img && img.complete && img.naturalWidth !== 0){
+      ctx.drawImage(img, e.x, e.y, e.w, e.h);
+  }else{
+      ctx.fillStyle="red";
+      ctx.fillRect(e.x,e.y,e.w,e.h);
+  }
+
+    ctx.fillStyle = "green";
+    ctx.fillRect(e.x, e.y - 5, e.w * (e.hp / e.maxHp), 4);
+  });
+
+  /* DRAW BOSS */
+  if(boss){
+  const bossIndex = ((currentLevel - 1) % bossImages.length);
+  let bossImg = bossImages[bossIndex];
+
+  if(bossImg && bossImg.complete && bossImg.naturalWidth !== 0){
+      ctx.drawImage(bossImg, boss.x, boss.y, boss.w, boss.h);
+  }else{
+      // fallback rectangle if image missing
+      ctx.fillStyle = "purple";
+      ctx.fillRect(boss.x, boss.y, boss.w, boss.h);
+  }
+      // HP Bar
+      ctx.fillStyle="red";
+      ctx.fillRect(20,20,320,12);
+
+      ctx.fillStyle="lime";
+      ctx.fillRect(20,20,320*(boss.hp/boss.maxHp),12);
+
+      ctx.fillStyle="white";
+      ctx.fillText("BOSS",150,18);
+  }
+
+  airdrops.forEach(a=>{
+      if(a.type==="hp"){
+          ctx.drawImage(heartImg,a.x,a.y,20,20);
+      }
+      else if(a.type==="shield"){
+          ctx.drawImage(shieldImg,a.x,a.y,20,20);
+      }
+      else if(a.type==="rapid"){
+          ctx.drawImage(bulletImg,a.x,a.y,20,20);
+      }
+  });
+  }
+  function quitLevel(){
+
+      menu.style.display = "none";
+
+      state = "HOME";
+
+      document.getElementById("ultimateIcon").style.display = "none";
+      document.getElementById("pauseBtn").style.display = "none";
+
+      buildHome();
+
+  }
+
+  function loop(){update();draw();requestAnimationFrame(loop);}
+  buildHome();
+  loop();
+</script>
+
+</body>
+</html>
